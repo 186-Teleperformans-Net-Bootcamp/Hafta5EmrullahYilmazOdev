@@ -1,4 +1,5 @@
-﻿using Hafta5EmrullahYilmazOdev.Data;
+﻿using ClosedXML.Excel;
+using Hafta5EmrullahYilmazOdev.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,7 @@ namespace Hafta5EmrullahYilmazOdev.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
+        public static Users users;
         private readonly UserManager<AppUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -69,5 +71,39 @@ namespace Hafta5EmrullahYilmazOdev.Controllers
     {
         public string Email { get; set; }
         public string Password { get; set; }
+    }
+
+    public IActionResult Excel(Users users)
+    {
+
+        using (var workbook = new XLWorkbook())
+        {
+            var worksheet = workbook.Worksheets.Add("Users");
+            var currentRow = 1;
+            worksheet.Cell(currentRow, 1).Value = "Id";
+            worksheet.Cell(currentRow, 2).Value = "FirstName";
+            worksheet.Cell(currentRow, 3).Value = "LastName";
+            worksheet.Cell(currentRow, 4).Value = "email";
+
+            foreach (var user in users)
+            {
+                currentRow++;
+                worksheet.Cell(currentRow, 1).Value = user.Id;
+                worksheet.Cell(currentRow, 2).Value = user.FirstName;
+                worksheet.Cell(currentRow, 3).Value = user.LastName;
+                worksheet.Cell(currentRow, 4).Value = user.email;
+            }
+
+            using (var stream = new MemoryStream())
+            {
+                workbook.SaveAs(stream);
+                var content = stream.ToArray();
+
+                return File(
+                    content,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "users.xlsx");
+            }
+        }
     }
 }
